@@ -1,0 +1,31 @@
+# Estrategia creada por Claude n.º 4 (todas las horas son de Nueva York). Motor: scripts\backtest\backtest_literatura.py
+# Base académica: Gao, Han, Li & Zhou (2018), "Market intraday momentum"; Baltussen, Da, Lammers & Martens
+#                 (2021), "Hedging demand and market intraday momentum" (gamma de dealers); Dim, Eraker &
+#                 Vilkov (2024), "0DTEs: Trading, gamma risk and volatility propagation".
+#
+# Nombre: CL4 = Claude n.º 4 · ReversionCierre1530 = a las 15:30 operar en contra de la dirección del día ·
+#         Stop06pct = stop a 0,6% del precio (≈150 pts)
+#
+# Resultado in-sample (oct-2025 a mar-2026): 123 trades, +$1.700, PF 1,41, DD -12%. Out-of-sample: LIMPIO.
+
+nombre = "CL4_ReversionCierre1530_Stop06pct"
+tipo = "reversion_cierre"
+descripcion = "A las 15:30 (cierre de la vela 15:29) si el precio está sobre la apertura de las 09:30 vender, si está bajo comprar; stop 0,6% del precio; sin objetivo; salida al cierre de la vela 15:59 (16:00); 1 trade por día"
+
+[senal]
+hora_decision = "15:30"      # se compara el cierre de la vela anterior a esta hora con la apertura 09:30
+
+[stop]
+porcentaje = 0.6             # stop a 0,6% del precio de la señal
+
+[salida]
+cierre_forzado = "16:00"     # (informativo) siempre sale al cierre de la vela de las 15:59
+
+[riesgo]
+capital_inicial_usd = 3000
+riesgo_usd = 300
+minimo_contratos = 1
+
+[costos]
+valor_punto_usd = 2
+comision_ida_vuelta_usd = 1.5

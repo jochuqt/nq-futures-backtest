@@ -1,0 +1,49 @@
+# Estrategia POC + VWAP (todas las horas son de Nueva York). Motor: scripts\backtest\backtest_poc_vwap.py
+# REGLA INVIOLABLE: el POC es el de la sesión EN DESARROLLO (solo trades anteriores a la señal).
+#
+# Nombre: PV15 = caja POC+VWAP con tolerancia 15 pts · M15 = zona agrandada 15 pts arriba y abajo · Max3 = máximo 3 trades por ventana y sesión · Ruptura / Rechazo = solo ese tipo de señal · Noche / RTH / Todo = horario ·
+#         BE / SinBE = stop a la entrada al tocar 1R o no ·
+#         Trail15M / Trail5M = desde 1R, stop bajo/sobre la última vela de 15 / 5 min cerrada
+
+nombre = "PV15_M15_Max3_RTH_BE_Trail15M_Ruptura"
+descripcion = "Caja POC(en desarrollo)+VWAP a <= 15 pts, zona +/- 15 pts; solo ruptura con cierre de 1 min a >= 5 ticks fuera de la zona; stop lado opuesto de la zona +5 pts; BE en 1R; trailing vela 15 min; sin TP; máx 3 trades por ventana; solo RTH 09:30-15:55"
+
+[horario]
+ventanas = ["rth"]
+nocturno_inicio = "20:00"      # la caja se sigue desde aquí (POC y VWAP ya se desarrollaron desde las 18:00)
+nocturno_fin = "09:00"         # cierre forzado de los trades nocturnos
+rth_inicio = "09:30"
+rth_fin = "15:55"              # cierre forzado de los trades RTH
+max_trades_por_ventana = 3     # máximo 3 entradas por ventana y sesión (los giros cuentan); luego se ignoran las señales
+
+[caja]
+tolerancia_puntos = 15.0       # la caja existe si |POC - VWAP| <= 15 pts (60 ticks)
+margen_puntos = 15.0          # la zona va del menor - 15 al mayor + 15 (toques, salidas y stop se miden contra ella)
+cierre_fuera_ticks = 5         # la vela de 1 min debe cerrar al menos 5 ticks fuera de la caja
+tipos = ["ruptura"]               # solo ruptura
+
+[stop]
+buffer_puntos = 5.0            # stop en el lado opuesto de la zona (al momento de la señal) +/- 5 pts
+
+[gestion]
+activar_en_R = 1.0             # al tocar 1R empieza el trailing (y el BE si está activado)
+breakeven = true
+trailing_minutos = 15           # stop bajo el mínimo / sobre el máximo de la última vela de 15 min cerrada
+trailing_buffer_ticks = 1
+
+[filtros]
+excluir_feriados = true
+excluir_dias_reducidos = true
+
+[ejecucion]
+slippage_entrada_ticks = 1
+slippage_salida_ticks = 1
+
+[costos]
+valor_punto_usd = 2            # MNQ
+comision_ida_vuelta_usd = 1.5
+
+[riesgo]
+capital_inicial_usd = 3000
+riesgo_usd = 300               # riesgo fijo por trade
+minimo_contratos = 1

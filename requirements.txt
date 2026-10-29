@@ -1,0 +1,9 @@
+numpy==2.5.4
+pandas==3.0.6
+plotly==7.1.0
+requests==2.34.2
+zstandard==0.25.0
+databento-dbn==0.70.0
+tzdata==2026.5
+# Opcional: solo para scripts/estimar_costos.py (necesita pyarrow)
+databento==0.87.0

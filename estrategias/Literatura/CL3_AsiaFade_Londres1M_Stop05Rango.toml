@@ -1,0 +1,34 @@
+# Estrategia creada por Claude n.º 3 (todas las horas son de Nueva York). Motor: scripts\backtest\backtest_literatura.py
+# Base académica: Boyarchenko, Larsen & Whelan (2023), "The Overnight Drift" (inventario de dealers en la
+#                 apertura europea); Nagel (2012), "Evaporating Liquidity" (reversión = pago por dar liquidez).
+#
+# Nombre: CL3 = Claude n.º 3 · AsiaFade = operar EN CONTRA de la ruptura del rango asiático ·
+#         Londres1M = señal con velas de 1 min entre 03:00 y 07:59 · Stop05Rango = stop a 0,5 x ancho del rango asiático
+#
+# Resultado in-sample (oct-2025 a mar-2026): 96 trades, +$5.828, PF 1,60, DD -31%. Out-of-sample: LIMPIO.
+# Aviso: la versión "seguir la ruptura" perdió y después se probó esta (algo de data snooping).
+
+nombre = "CL3_AsiaFade_Londres1M_Stop05Rango"
+tipo = "asia_fade"
+descripcion = "Rango asiático = máximo/mínimo 18:00-02:59; entre 03:00 y 07:59 la primera vela de 1 min que cierra fuera del rango da la señal EN CONTRA (cierra arriba = venta, abajo = compra); stop = cierre de la señal +/- 0,5 x ancho del rango; sin objetivo; salida 09:29; 1 trade por sesión; no opera sesiones con roll"
+
+[senal]
+fin_rango_asia = "03:00"     # el rango asiático va de 18:00 hasta antes de esta hora
+hasta = "08:00"              # después de esta hora ya no se buscan señales
+vela_minutos = 1
+modo = "en_contra"           # "en_contra" (esta estrategia) o "a_favor" (seguir la ruptura: perdió en el IS)
+
+[stop]
+fraccion_rango = 0.5         # stop = cierre de la vela señal +/- 0,5 x (máximo - mínimo del rango asiático)
+
+[salida]
+cierre_forzado = "09:29"     # sale al cierre de la vela de las 09:29 (antes de la apertura)
+
+[riesgo]
+capital_inicial_usd = 3000
+riesgo_usd = 300
+minimo_contratos = 1
+
+[costos]
+valor_punto_usd = 2
+comision_ida_vuelta_usd = 1.5

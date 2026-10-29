@@ -1,0 +1,31 @@
+# Estrategia creada por Claude n.º 5 (todas las horas son de Nueva York). Motor: scripts\backtest\backtest_literatura.py
+# Base académica: Chordia & Subrahmanyam (2004), "Order imbalance and individual stock returns";
+#                 Chordia, Roll & Subrahmanyam (2002), "Order imbalance, liquidity, and market returns".
+#
+# Nombre: CL5 = Claude n.º 5 · DeltaApertura1000 = a las 10:00 seguir el signo del delta de 09:30-09:59 ·
+#         Stop1pct = stop a 1% del precio (≈250 pts; con 1 MNQ el riesgo es ≈$500, más que $300)
+#
+# Resultado in-sample (oct-2025 a mar-2026): 123 trades, +$8.010, PF 1,51, DD -33%. Out-of-sample: LIMPIO.
+
+nombre = "CL5_DeltaApertura1000_Stop1pct"
+tipo = "delta_apertura"
+descripcion = "A las 10:00: delta (compras agresivas - ventas agresivas) de 09:30-09:59 dividido por el volumen; positivo = compra, negativo = venta, a mercado en la apertura de las 10:00; stop 1% del precio; sin objetivo; cierre 15:55; 1 trade por día"
+
+[senal]
+hora_decision = "10:00"      # se suma el delta desde 09:30 hasta antes de esta hora
+umbral = 0.0                 # |delta / volumen| debe ser mayor que esto (0 = cualquier signo)
+
+[stop]
+porcentaje = 1.0             # stop a 1% del precio de la señal
+
+[salida]
+cierre_forzado = "15:55"
+
+[riesgo]
+capital_inicial_usd = 3000
+riesgo_usd = 300
+minimo_contratos = 1
+
+[costos]
+valor_punto_usd = 2
+comision_ida_vuelta_usd = 1.5

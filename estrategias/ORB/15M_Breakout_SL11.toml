@@ -1,0 +1,86 @@
+# Estrategia del PDF "Estrategias ORB prueba 1" (todas las horas son de Nueva York).
+# Parámetros explicados en estrategias\ORB\_plantilla_base.toml.
+
+nombre = "15M_Breakout_SL11"
+descripcion = "Rango 09:30-09:45; breakout: vela de 5 min cierra fuera del rango; stop al otro lado del rango; TP 1R; entradas hasta 12:00"
+
+[rango]
+inicio = "09:30"
+minutos = 15
+ancho_min_puntos = 0
+ancho_max_puntos = 0
+ancho_min_vs_promedio = 0
+ancho_max_vs_promedio = 0
+dias_promedio = 14
+
+[entrada]
+timeframe_minutos = 5
+tipo = "breakout"
+confirmacion = "cierre"
+buffer_ticks = 1
+direccion = "ambas"
+hora_limite = "12:00"
+max_trades_dia = 1
+permitir_misma_direccion = true
+velas_para_ruptura = 0
+
+[retesteo]
+offset_ticks = 0
+max_velas_espera = 20
+cancelar_si_cierra_dentro = false
+requiere_ruptura_previa = false
+
+[stop]
+tipo = "rango_opuesto"
+valor = 0
+buffer_ticks = 1
+max_puntos = 0
+si_excede_max = "saltar"
+respaldo = "rango_opuesto"
+
+[breakeven]
+activar_en_R = 0
+offset_ticks = 1
+
+[trailing]
+tipo = "ninguno"
+activar_en_R = 0
+distancia = 0
+velas = 2
+
+[salida]
+objetivo_tipo = "R"
+objetivo_valor = 1
+hora_cierre = "15:55"
+salir_si_cierra_dentro = false
+
+[parcial]
+porcentaje = 0
+en_R = 1
+breakeven_tras_parcial = true
+
+[filtros]
+dias_semana = ["lun", "mar", "mie", "jue", "vie"]
+excluir_feriados = true
+excluir_dias_reducidos = true
+excluir_fechas = []
+gap_min_puntos = 0
+gap_max_puntos = 0
+a_favor_de = "ninguno"
+
+[ejecucion]
+slippage_entrada_ticks = 1
+slippage_salida_ticks = 1
+limite_requiere_traspaso_ticks = 1
+misma_vela = "peor"
+
+[costos]
+valor_punto_usd = 2
+contratos = 1
+comision_ida_vuelta_usd = 1.5
+
+[riesgo]
+capital_inicial_usd = 3000
+modo = "riesgo_usd"
+riesgo_usd = 300
+minimo_contratos = 1

@@ -1,0 +1,33 @@
+# Estrategia creada por Claude n.º 2 (todas las horas son de Nueva York). Motor: scripts\backtest\backtest_literatura.py
+# Base académica: Plastun, Sibande, Gupta & Wohar (2020), "Price gap anomaly in the US stock market:
+#                 The whole story" (momentum después de gaps).
+#
+# Nombre: CL2 = Claude n.º 2 · GapGo = entrar a favor del gap · Confirma5M = la vela 09:30-09:34 debe
+#         cerrar a favor del gap · StopCierrePrevio = stop en el cierre del día anterior (gap lleno = idea muerta)
+#
+# Resultado in-sample (oct-2025 a mar-2026): 53 trades, +$3.795, PF 1,53, DD -36%. Out-of-sample: LIMPIO.
+
+nombre = "CL2_GapGo_Confirma5M_StopCierrePrevio"
+tipo = "gap_and_go"
+descripcion = "Gap = apertura 09:30 vs cierre 15:59 del día anterior (ajustado por roll); si |gap| >= 0,10% y la vela 09:30-09:34 cierra a favor del gap, entrar a las 09:35 a favor del gap; stop = cierre previo; sin objetivo; cierre 15:55"
+
+[senal]
+gap_min_pct = 0.10           # gap mínimo en % (0,10% ≈ 25 pts)
+gap_max_pct = 2.0            # gap máximo en %
+entrada = "09:35"            # se entra en la apertura de esta vela
+requiere_confirmacion = true # la vela desde 09:30 hasta la entrada debe cerrar a favor del gap
+
+[stop]
+tipo = "cierre_previo"       # "cierre_previo" o "extremo" (extremo opuesto desde 09:30 +/- 1 tick)
+
+[salida]
+cierre_forzado = "15:55"
+
+[riesgo]
+capital_inicial_usd = 3000
+riesgo_usd = 300
+minimo_contratos = 1
+
+[costos]
+valor_punto_usd = 2
+comision_ida_vuelta_usd = 1.5

@@ -1,0 +1,33 @@
+# Estrategia creada por Claude n.º 1 (todas las horas son de Nueva York). Motor: scripts\backtest\backtest_literatura.py
+# Base académica: Dalton, Jones & Dalton, "Mind Over Markets" (Market Profile, "range extension");
+#                 Crabel (1990), "Day Trading with Short Term Price Patterns and Opening Range Breakout".
+#
+# Nombre: CL1 = Claude n.º 1 · IB60 = Initial Balance de 60 min (09:30-10:29) ·
+#         Ruptura5M = primer cierre de vela de 5 min fuera del IB · StopOpuesto = stop en el otro lado del IB
+#
+# Resultado in-sample (oct-2025 a mar-2026): 109 trades, +$4.806, PF 1,48, DD -27%. Out-of-sample: LIMPIO.
+
+nombre = "CL1_IB60_Ruptura5M_StopOpuesto"
+tipo = "ib_ruptura"
+descripcion = "IB = máximo/mínimo 09:30-10:29; desde 10:30 hasta 15:00 el primer cierre de vela de 5 min fuera del IB da la entrada a favor (compra arriba / venta abajo); stop en el lado opuesto del IB -/+ 1 tick; sin objetivo; 1 trade por día; cierre 15:55"
+
+[senal]
+ib_fin = "10:30"             # el IB va de 09:30 hasta antes de esta hora
+vela_minutos = 5             # se mira el cierre de cada vela de 5 min
+hasta = "15:00"              # después de esta hora ya no se buscan rupturas
+
+[stop]
+tipo = "lado_opuesto"        # "lado_opuesto" (otro extremo del IB) o "mitad" (mitad del IB)
+buffer_ticks = 1             # 1 tick más allá del extremo
+
+[salida]
+cierre_forzado = "15:55"     # sin objetivo ni trailing: sale por stop o a las 15:55
+
+[riesgo]
+capital_inicial_usd = 3000
+riesgo_usd = 300             # contratos = 300 / (riesgo en pts x $2), mínimo 1
+minimo_contratos = 1
+
+[costos]
+valor_punto_usd = 2          # MNQ
+comision_ida_vuelta_usd = 1.5

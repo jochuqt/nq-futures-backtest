@@ -1,0 +1,211 @@
+# =====================================================================
+#  PLANTILLA BASE PARA UNA ESTRATEGIA ORB NUEVA  (todas las horas son de Nueva York)
+# =====================================================================
+#  Igual a _plantilla_orb.toml, pero la salida ya viene armada así:
+#    - SIN objetivo fijo (sin TP).
+#    - En +1R se cierra el 50% de los contratos (salida parcial) y el stop
+#      del resto pasa a breakeven (la entrada + 1 tick).
+#    - El resto sigue con trailing stop por velas: bajo el mínimo (largos) /
+#      sobre el máximo (cortos) de las últimas 2 velas de 5 minutos cerradas.
+#    - Lo que siga abierto a las 15:55 se cierra a mercado.
+#  Las secciones que cambian respecto a _plantilla_orb.toml están marcadas
+#  con  <<< BASE  a la derecha. Todo lo demás tiene el valor por defecto.
+#
+#  IMPORTANTE sobre la salida parcial: se cierran solo contratos ENTEROS
+#  (redondeado hacia abajo). Con 1 contrato no se puede cerrar la mitad:
+#  en ese caso no hay parcial, pero en +1R el stop igual pasa a breakeven y
+#  el contrato sigue con el trailing. Con 3 contratos se cierra 1 (50% de 3
+#  = 1.5 -> 1). Con el riesgo fijo de $300 y stops grandes, muchos trades
+#  serán de 1 solo contrato.
+#
+#  Cómo usarla:
+#    1. Copia este archivo dentro de la subcarpeta de su estrategia (ej.
+#       estrategias\ORB) y renómbralo SIN "_" al inicio (ej.
+#       orb15_breakout_parcial.toml). Sin espacios ni tildes.
+#    2. Cambia "nombre" (abajo) por uno ÚNICO: cada estrategia necesita el suyo.
+#    3. Escribe en "descripcion" qué hace la estrategia.
+#    4. Cambia los parámetros que quieras. Cada uno está explicado a su derecha.
+#    5. Corre: .venv\Scripts\python.exe -m scripts.backtest.backtest --estrategia ORB
+#  Los archivos que empiezan con "_" (como este) se ignoran en el backtest.
+#  No edites esta plantilla: cópiala. Así siempre tienes la base intacta.
+#
+#  Aquí aparecen TODOS los parámetros. Si borras un parámetro, se usa el
+#  valor por defecto del programa (el de _plantilla_orb.toml), NO el de esta
+#  plantilla: si borras las líneas marcadas con <<< BASE, vuelves a la salida
+#  normal con TP en 2R.
+#
+#  Formato: texto entre comillas ("09:30"), números sin comillas (15),
+#  sí/no como true / false, listas entre corchetes (["lun", "mar"]).
+#  Todo lo que va después de # es un comentario y no afecta nada.
+#
+#  Glosario:
+#    R          = el riesgo del trade: distancia entre la entrada y el stop
+#                 inicial. "2R" = ganar 2 veces lo que se arriesgaba.
+#    tick       = 0.25 puntos (el movimiento mínimo de NQ). 1 punto = 4 ticks.
+#    rango      = máximo y mínimo del precio durante el rango de apertura.
+#    EMA        = media móvil exponencial del precio de cierre (ver [ema]).
+#    breakeven  = stop en el precio de entrada: si se toca, el trade sale sin
+#                 ganar ni perder (salvo comisiones).
+#    trailing   = stop que se va moviendo a favor a medida que el trade gana.
+# =====================================================================
+
+nombre = "CAMBIAR_ESTE_NOMBRE"  # nombre corto y ÚNICO: solo letras sin tilde, números, "-" y "_"
+descripcion = "Describe aquí la estrategia"
+
+[rango]
+inicio = "09:30"                # hora en que empieza el rango de apertura
+minutos = 15                    # duración del rango (09:30 a 09:44:59)
+ancho_min_puntos = 0            # no operar si el rango mide menos de X puntos (0 = sin filtro)
+ancho_max_puntos = 0            # no operar si el rango mide más de X puntos (0 = sin filtro)
+ancho_min_vs_promedio = 0       # no operar si rango < X veces el rango diario promedio (0 = sin filtro; ej. 0.15)
+ancho_max_vs_promedio = 0       # no operar si rango > X veces el rango diario promedio (0 = sin filtro; ej. 0.40)
+dias_promedio = 14              # cuántos días previos usar para el "rango diario promedio" (09:30-16:00)
+
+[entrada]
+timeframe_minutos = 5           # velas para las señales (1, 3, 5, 15...). rango.minutos debe ser múltiplo de este número
+tipo = "breakout"               # "breakout"        = entra en la ruptura
+                                # "retesteo"        = tras la ruptura, deja una orden límite en el borde del rango
+                                #                     y entra cuando el precio vuelve a tocarlo (ver [retesteo])
+                                # "retesteo_cierre" = entra a mercado al CIERRE de una vela de timeframe que tocó
+                                #                     el borde del rango y cerró fuera de él (ver [retesteo]).
+                                #                     Ignora "confirmacion".
+                                # "cierre_ema"      = NO es ORB: una sola señal por día. Si la vela del rango
+                                #                     (ej. 09:30-09:35) cierra SOBRE la EMA -> largo; BAJO la EMA
+                                #                     -> corto; igual -> no opera. La EMA incluye esa vela.
+                                #                     Entra a mercado al cierre de esa vela (ej. 09:35).
+                                #                     Exige rango.minutos = ema.timeframe_minutos. Ignora
+                                #                     "confirmacion", "buffer_ticks" y [retesteo].
+                                #                     Ejemplos: carpeta estrategias\ORB.
+confirmacion = "cierre"        # "cierre" = la ruptura cuenta cuando una vela de timeframe CIERRA fuera del rango
+                                #            (se entra a mercado en la apertura de la vela siguiente)
+                                # "toque"  = la ruptura cuenta apenas el precio TOCA el borde + buffer
+                                #            (orden stop: se entra justo en ese precio)
+buffer_ticks = 1                # cuántos ticks más allá del borde del rango debe llegar el precio para contar como ruptura
+direccion = "ambas"             # "ambas", "solo_largos" o "solo_cortos"
+hora_limite = "12:00"           # después de esta hora no se abren trades nuevos
+max_trades_dia = 1              # máximo de trades por día (2 o más permite reentrar después de cerrar uno)
+permitir_misma_direccion = true # con max_trades_dia > 1: ¿se puede reentrar en la misma dirección del trade anterior?
+velas_para_ruptura = 0          # la ruptura solo cuenta en las primeras X velas de timeframe después del rango
+                                # (0 = cualquier vela hasta hora_limite; 1 = solo la primera, ej. la de 09:45)
+
+[retesteo]                      # solo se usa si entrada.tipo = "retesteo" o "retesteo_cierre"
+offset_ticks = 0                # "retesteo": dónde va la orden límite: 0 = exactamente en el borde del rango;
+                                #   2 = 2 ticks antes de llegar al borde (se llena más fácil, pero a peor precio)
+                                # "retesteo_cierre": a cuántos ticks del borde ya cuenta como "tocar" el rango
+                                #   (0 = el precio debe llegar al borde)
+max_velas_espera = 20            # solo "retesteo": cuántas velas de timeframe esperar el retesteo antes de cancelarlo
+cancelar_si_cierra_dentro = false # solo "retesteo": cancelar si una vela cierra de vuelta dentro del rango antes del retesteo
+requiere_ruptura_previa = true  # solo "retesteo_cierre": true = el precio debe haber salido del rango (borde + buffer)
+                                #   en un minuto ANTERIOR al toque; false = vale cualquier vela que toque el borde
+                                #   y cierre fuera, aunque sea la primera ruptura
+ruptura_previa_en = "minuto"    # solo "retesteo_cierre" con requiere_ruptura_previa = true: dónde debe estar esa salida
+                                #   "minuto" = en cualquier minuto anterior al toque (puede ser dentro de la misma
+                                #              vela de timeframe: muchas veces es la misma vela del breakout)
+                                #   "vela"   = en una vela de timeframe ANTERIOR a la que toca el borde y cierra fuera
+
+[stop]                          # stop INICIAL (después lo mueven el breakeven y el trailing)
+tipo = "rango_opuesto"          # "rango_opuesto"  = al otro lado del rango (largo: bajo el mínimo del rango)
+                                # "medio_rango"    = en la mitad del rango
+                                # "puntos"         = a "valor" puntos de la entrada
+                                # "multiplo_rango" = a "valor" veces el ancho del rango (ej. 0.5 = medio rango de distancia)
+                                # "vela_senal"     = en el extremo de la última vela de timeframe cerrada
+                                # "ema"            = en la EMA (ver [ema]) al momento de entrar. Si la EMA aún no está
+                                #                    lista o queda del lado equivocado (ej. largo con la EMA sobre
+                                #                    la entrada), se usa el stop de "respaldo"
+valor = 0                       # solo para "puntos" y "multiplo_rango" (también si el respaldo es uno de esos)
+buffer_ticks = 1                # ticks extra de espacio más allá del nivel del stop (también para la EMA y el
+                                # trailing por velas)
+max_puntos = 0                  # riesgo máximo permitido en puntos (0 = sin límite)
+si_excede_max = "saltar"        # si el riesgo pasa max_puntos: "saltar" = no tomar el trade; "recortar" = poner el stop en max_puntos
+min_puntos = 0                  # riesgo mínimo en puntos (0 = sin mínimo). Evita stops diminutos (ej. EMA pegada al
+                                # precio), que con riesgo_usd fijo compran muchísimos contratos
+si_menor_min = "saltar"         # si el riesgo es menor que min_puntos: "saltar" = no tomar el trade;
+                                # "ampliar" = alejar el stop hasta min_puntos de la entrada
+respaldo = "rango_opuesto"      # solo con tipo = "ema": stop a usar cuando la EMA no sirve. Cualquier tipo de
+                                # arriba menos "ema", o "no_operar" = no tomar el trade
+
+[ema]                           # media móvil exponencial para stop.tipo = "ema" y/o trailing.tipo = "ema"
+periodos = 20                   # cuántas velas promedia (ej. 9 = rápida, 20 = media, 50 = lenta)
+timeframe_minutos = 15           # en velas de cuántos minutos se calcula (5, 15, 60...). Usa velas de 24 horas
+                                # (horario extendido), ajustadas por los rolls de contrato. Solo cuenta la última
+                                # vela YA CERRADA. Se considera lista después de 3 x periodos velas.
+                                # Es UNA sola EMA: si el stop y el trailing usan EMA, usan esta misma.
+
+[breakeven]                     # mover el stop a la entrada cuando el trade va ganando
+activar_en_R = 0                # cuando el precio llega a +X R, el stop pasa a la entrada (0 = desactivado; ej. 1)
+                                # (en esta base no hace falta: el breakeven lo hace la parcial, ver [parcial])
+offset_ticks = 1                # el stop queda X ticks a favor de la entrada (para cubrir comisiones)
+                                # (también se usa para el breakeven después de la parcial)
+
+[trailing]                      # el stop persigue al precio cuando el trade va ganando
+tipo = "velas"                  # <<< BASE
+                                # "ninguno"
+                                # "puntos" = el stop queda a "distancia" puntos del mejor precio alcanzado
+                                # "R"      = el stop queda a "distancia" R del mejor precio alcanzado
+                                # "velas"  = el stop va bajo el mínimo (largos) / sobre el máximo (cortos)
+                                #            de las últimas "velas" velas de entrada.timeframe_minutos cerradas
+                                #            (- stop.buffer_ticks). Se recalcula al cierre de cada vela.
+                                # "ema"    = cada vez que cierra una vela de ema.timeframe_minutos, el stop se
+                                #            mueve a la EMA (+ stop.buffer_ticks). Sales si el precio la toca.
+                                #            Si al entrar la EMA está del lado equivocado (largo bajo la EMA /
+                                #            corto sobre la EMA), NO se entra (el trade se cerraría al instante).
+                                # En todos los tipos el stop solo se mueve a favor, nunca se aleja.
+activar_en_R = 1                # <<< BASE  empieza a perseguir cuando el trade llega a +X R (0 = desde la entrada).
+                                #           1 = junto con la parcial: antes de +1R manda el stop inicial
+distancia = 0                   # para "puntos" y "R"
+velas = 2                       # <<< BASE  para "velas": cuántas velas mirar (1 = más ajustado, 3+ = más holgado)
+timeframe_minutos = 0           # para "velas": tamaño de esas velas en minutos (0 = el de entrada.timeframe_minutos;
+                                # ej. 15 = velas de 15 min alineadas al inicio del rango: 09:30-09:45, 09:45-10:00...)
+
+[salida]
+objetivo_tipo = "ninguno"       # <<< BASE  "R", "puntos", "multiplo_rango" (veces el ancho del rango) o "ninguno"
+                                #           "ninguno" = sin TP: se sale por stop, trailing o hora_cierre
+objetivo_valor = 2              # ej. objetivo_tipo = "R" y objetivo_valor = 2 -> objetivo en +2R
+                                # (no se usa con objetivo_tipo = "ninguno")
+hora_cierre = "15:55"           # a esta hora se cierra todo lo que siga abierto (a mercado)
+salir_si_cierra_dentro = false  # salir si una vela de timeframe cierra de vuelta dentro del rango (ruptura fallida)
+
+[parcial]                       # cerrar una parte de la posición antes del objetivo
+porcentaje = 50                 # <<< BASE  qué % de los contratos cerrar (0 = sin salida parcial). Solo contratos
+                                #           enteros, redondeado hacia abajo (con 1 contrato no hay parcial)
+en_R = 1                        # en cuántas R se cierra esa parte (orden límite)
+breakeven_tras_parcial = true   # después de la parcial, mover el stop a breakeven (usa breakeven.offset_ticks).
+                                # Se aplica aunque no se haya podido cerrar ningún contrato (1 solo contrato)
+
+[filtros]
+dias_semana = ["lun", "mar", "mie", "jue", "vie"]   # días en que se opera
+excluir_feriados = true         # no operar en feriados de la bolsa de NY (CME abre con horario corto)
+excluir_dias_reducidos = true   # no operar días de cierre temprano (ej. 28-nov, 24-dic)
+excluir_fechas = []             # fechas a saltar, ej. ["2025-12-10", "2026-01-28"] (días de FOMC, CPI...)
+gap_min_puntos = 0              # operar solo si |apertura 09:30 - cierre 16:00 anterior| >= X puntos (0 = sin filtro)
+gap_max_puntos = 0              # operar solo si ese gap <= X puntos (0 = sin filtro)
+a_favor_de = "ninguno"          # "ninguno"
+                                # "vwap" = largos solo con el precio sobre el VWAP del día (desde el inicio del rango),
+                                #          cortos solo bajo el VWAP
+                                # "gap"  = largos solo si el día abrió con gap al alza, cortos solo con gap a la baja
+
+[ejecucion]                     # supuestos de ejecución (mejor pecar de pesimista)
+slippage_entrada_ticks = 1      # ticks de deslizamiento al entrar con orden de mercado o stop
+slippage_salida_ticks = 1       # ticks de deslizamiento al salir por stop o a mercado (objetivo y parcial son órdenes
+                                # límite: sin slippage)
+limite_requiere_traspaso_ticks = 1 # una orden límite (objetivo, parcial, retesteo) se llena solo si el precio la
+                                # supera por X ticks (0 = basta con tocarla; más realista usar 1)
+misma_vela = "peor"             # si en una misma vela de 1 minuto se tocan stop y objetivo/parcial:
+                                # "peor" = asumir que primero fue el stop; "mejor" = primero el objetivo/parcial
+
+[costos]
+valor_punto_usd = 2             # MNQ (micro) = 2 dólares por punto; NQ = 20
+contratos = 1                   # solo se usa con riesgo.modo = "contratos_fijos"
+comision_ida_vuelta_usd = 1.5   # comisión + tarifas por contrato, entrada y salida juntas (ajústala a tu broker)
+                                # (referencia: MNQ ~1.5; NQ ~4.5)
+
+[riesgo]                        # tamaño de la cuenta y cuánto se arriesga por trade
+capital_inicial_usd = 3000      # saldo con el que empieza la cuenta (para retorno % y drawdown %)
+modo = "riesgo_usd"             # "riesgo_usd"      = calcula los contratos para arriesgar "riesgo_usd" por trade
+                                #                     (contratos = riesgo_usd / (puntos de stop x valor_punto_usd),
+                                #                     redondeado hacia abajo)
+                                # "contratos_fijos" = siempre costos.contratos contratos
+riesgo_usd = 300                # dólares que se arriesgan por trade (fijo, no cambia con el saldo)
+minimo_contratos = 1            # si el stop es tan grande que no cabe ni 1 contrato en riesgo_usd:
+                                # 1 = se toma 1 contrato igual (ese trade arriesga más de riesgo_usd)
+                                # 0 = no se toma el trade
