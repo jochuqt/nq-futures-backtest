@@ -1,0 +1,25 @@
+# Claves y configuración local (NUNCA subir)
+.env
+.env.*
+config.json
+*.key
+*secret*
+
+# Datos de mercado (licencia de Databento: no se publican)
+data/
+*.dbn
+*.dbn.zst
+*.zst
+*.parcial
+*.parquet
+*.pkl
+
+# Resultados generados (contienen precios derivados de los datos)
+resultados/
+
+# Entorno de Python
+.venv/
+venv/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
