@@ -93,7 +93,7 @@ python -m scripts.informes.comparar --periodo in-sample
 Las fechas de los periodos in-sample / out-of-sample están definidas en
 `scripts/backtest/backtest.py`.
 
-## Lo que NO incluye este repositorio
+## Lo que no incluye este repositorio
 
 - **Datos de mercado**: son de Databento y su licencia no permite redistribuirlos.
   Cada usuario descarga los suyos.
@@ -104,4 +104,4 @@ Las fechas de los periodos in-sample / out-of-sample están definidas en
 
 Python · pandas · numpy · plotly · API REST de Databento · formato binario DBN · zstandard
 
-Desarrollado con ayuda de Claude Code (asistente de programación con IA).
+
